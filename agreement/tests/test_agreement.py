@@ -2,6 +2,7 @@
 # Copyright 2021 Sergio Teruel - Tecnativa
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html)
 
+from odoo import Command
 from odoo.tests.common import TransactionCase
 
 
@@ -35,6 +36,21 @@ class TestAgreement(TransactionCase):
     def test_compute_display_name(self):
         display_name = self.agreement.display_name
         self.assertEqual(display_name, f"[{self.agreement.code}] {self.agreement.name}")
+
+    def test_partner_action_open_agreement(self):
+        user = self.env["res.users"].create(
+            {
+                "name": "Test Agreement User",
+                "login": "test_agreement_user",
+                "group_ids": [Command.set([self.env.ref("base.group_user").id])],
+            }
+        )
+        partner = self.env["res.partner"].create({"name": "Agreement partner"})
+        self.agreement.partner_id = partner
+        action = partner.with_user(user).action_open_agreement()
+        self.assertEqual(action["res_model"], "agreement")
+        self.assertEqual(action["domain"], [("partner_id", "=", partner.id)])
+        self.assertEqual(action["context"]["default_partner_id"], partner.id)
 
     def test_copy(self):
         agreement1 = self.agreement.copy(default={"code": "Test Code"})
