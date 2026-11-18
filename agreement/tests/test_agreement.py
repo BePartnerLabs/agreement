@@ -95,3 +95,24 @@ class TestAgreement(TransactionCase):
             copies.mapped("code"),
             [f"{self.agreement.code} (copy)", "OTHER (copy)"],
         )
+
+    def test_readonly_user_can_read_agreement_type(self):
+        user = self.env["res.users"].create(
+            {
+                "name": "Read-only agreement user",
+                "login": "agreement_readonly_user",
+                "group_ids": [
+                    Command.set(
+                        [
+                            self.env.ref("base.group_user").id,
+                            self.env.ref("agreement.group_agreement_readonly").id,
+                        ]
+                    )
+                ],
+            }
+        )
+        self.assertFalse(user.has_group("agreement.group_agreement_user"))
+        self.assertEqual(
+            self.agreement_type.with_user(user).read(["name"])[0]["name"],
+            "Test Agreement Type",
+        )
