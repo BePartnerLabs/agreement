@@ -87,3 +87,11 @@ class TestAgreement(TransactionCase):
         self.assertFalse(
             self.user_no_agreement.has_group("agreement.group_agreement_readonly")
         )
+
+    def test_copy_multi(self):
+        agreement2 = self.agreement.copy(default={"code": "OTHER"})
+        copies = (self.agreement | agreement2).copy()
+        self.assertEqual(
+            copies.mapped("code"),
+            [f"{self.agreement.code} (copy)", "OTHER (copy)"],
+        )

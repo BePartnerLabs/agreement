@@ -81,10 +81,11 @@ class Agreement(models.Model):
         for rec in self:
             rec.display_name = f"[{rec.code}] {rec.name}"
 
-    def copy(self, default=None):
+    def copy_data(self, default=None):
         """Always assign a value for code because is required"""
-        default = dict(default or {})
-        if default.get("code", False):
-            return super().copy(default)
-        default.setdefault("code", self.env._("%(code)s (copy)", code=self.code))
-        return super().copy(default)
+        vals_list = super().copy_data(default=default)
+        if default and default.get("code"):
+            return vals_list
+        for rec, vals in zip(self, vals_list, strict=True):
+            vals["code"] = self.env._("%(code)s (copy)", code=rec.code)
+        return vals_list
